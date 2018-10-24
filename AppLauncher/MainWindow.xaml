@@ -1,0 +1,31 @@
+﻿<Window x:Class="RapidLaunch.AppLauncher.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:RapidLaunch.AppLauncher"
+        mc:Ignorable="d"
+        Title="Launcher" Height="360" Width="280">
+    <DockPanel>
+        <StatusBar DockPanel.Dock="Bottom">
+            <TextBlock Name="ConnectionStatusText">OpenFin Not Connected</TextBlock>
+            <Separator/>
+            <TextBlock>No Messages</TextBlock>
+        </StatusBar>
+        <StackPanel>
+            <Separator></Separator>
+            <Label>WPF Apps to Spawn:</Label>
+            <TextBox Name="AppCountText" PreviewTextInput="NumberValidationTextBox">20</TextBox>
+            <Label>Embedded Views to Spawn:</Label>
+            <TextBox Name="EmbeddedViewCountText" PreviewTextInput="NumberValidationTextBox">10</TextBox>
+            <Label>Launch Delay (ms):</Label>
+            <TextBox Name="DelayText" PreviewTextInput="NumberValidationTextBox">500</TextBox>
+            <Separator></Separator>
+            <Button Name="SpawnButton" IsEnabled="False" Click="SpawnButton_Click">Spawn</Button>
+            <Button Name="ArrangeButton" IsEnabled="False" Click="ArrangeButton_Click">Arrange</Button>
+            <Separator></Separator>
+            <Button Name="CloseButton" IsEnabled="False" Click="CloseButton_Click">Close</Button>
+            <Button Name="TerminateButton" IsEnabled="False" Click="TerminateButton_Click">Terminate</Button>
+        </StackPanel>
+    </DockPanel>
+</Window>

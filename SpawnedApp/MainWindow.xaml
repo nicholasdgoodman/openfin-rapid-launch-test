@@ -1,0 +1,18 @@
+﻿<Window x:Class="RapidLaunch.SpawnedApp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:RapidLaunch.SpawnedApp"
+        xmlns:of="clr-namespace:Openfin.WPF;assembly=OpenFin.WPF"
+        mc:Ignorable="d"
+        Title="Child Window" Height="160" Width="280">
+    <DockPanel Name="MainPanel" Background="LightBlue">
+        <StatusBar DockPanel.Dock="Bottom">
+            <TextBlock Name="ConnectionStatusText">OpenFin Not Connected</TextBlock>
+            <Separator/>
+            <TextBlock>No Messages</TextBlock>
+        </StatusBar>
+        <of:EmbeddedView Name="WebContents" Margin="5" Background="LightGray"></of:EmbeddedView>
+    </DockPanel>
+</Window>
