@@ -27,7 +27,7 @@ namespace RapidLaunch.AppLauncher
 
             OpenFinGlobals.RuntimeInstance.Connect(() => 
             {
-
+                mMessageBus = new MessageBus();
             });
         }
 
@@ -96,30 +96,7 @@ namespace RapidLaunch.AppLauncher
 
                 if (appShouldEmbed)
                 {
-                    var appUuid = Guid.NewGuid().ToString();
-
-                    var appOptions = new Openfin.Desktop.ApplicationOptions(
-                        name: appUuid,
-                        uuid: appUuid,
-                        url: OpenFinGlobals.DefaultAppUrl)
-                    {
-                        NonPersistent = false
-                    };
-
-                    Openfin.Desktop.Application app = null;
-                    app = new Openfin.Desktop.Application(appOptions, OpenFinGlobals.RuntimeInstance.DesktopConnection,
-                        ack =>
-                        {
-                            app.Run(() => 
-                            {
-                                tsc.SetResult(Process.Start(new ProcessStartInfo()
-                                {
-                                    FileName = "SpawnedApp.exe",
-                                    Arguments = appUuid,
-                                    UseShellExecute = false
-                                }));
-                            });
-                        });
+                    tsc = SpawnEmbeddedApp();
                 }
                 else
                 {
@@ -216,6 +193,13 @@ namespace RapidLaunch.AppLauncher
                 Arguments = appUuid,
                 UseShellExecute = false
             }));
+
+            app.Closed += (s, e) =>
+            {
+                mMessageBus.Publish("sometopic", $"{app.Uuid} is closed");
+            };
+
+            mMessageBus.Publish("sometopic", $"{app.Uuid} is starting...");
 
             return tsc;
         }
