@@ -72,8 +72,8 @@ namespace RapidLaunch.SpawnedApp
         {
             while(true)
             {
-                MessagePublisher.PingAppLauncher();
-                Task.Delay(1000).Wait();
+                //MessagePublisher.PingAppLauncher();
+                //Task.Delay(1000).Wait();
             }
         }
     }

@@ -17,7 +17,7 @@ namespace RapidLaunch.Common
             };
 
             RuntimeInstance = Fin.Runtime.GetRuntimeInstance(openfinOptions);
-            DefaultAppUrl = "about:blank";
+            DefaultAppUrl = "http://akveo.com/blur-admin/#/dashboard";
         }
 
         public static Fin.Runtime RuntimeInstance { get; private set; }

@@ -22,6 +22,7 @@
             <TextBox Name="DelayText" PreviewTextInput="NumberValidationTextBox">500</TextBox>
             <Separator></Separator>
             <Button Name="SpawnButton" IsEnabled="False" Click="SpawnButton_Click">Spawn</Button>
+            <Button Name="SpawnAdHocButton" IsEnabled="False" Click="AdhocSpawnButton_Click">Spawn ad hoc</Button>
             <Button Name="ArrangeButton" IsEnabled="False" Click="ArrangeButton_Click">Arrange</Button>
             <Separator></Separator>
             <Button Name="CloseButton" IsEnabled="False" Click="CloseButton_Click">Close</Button>

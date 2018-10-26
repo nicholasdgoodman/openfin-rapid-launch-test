@@ -1,0 +1,6 @@
+{
+  "targetfile": "dotnet.log",
+  "enabled": true,
+  "minlevel": "info",
+  "toconsole": true
+}
