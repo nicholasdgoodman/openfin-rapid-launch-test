@@ -15,7 +15,8 @@ namespace RapidLaunch.AppLauncher
     /// </summary>
     public partial class MainWindow : Window
     {
-        List<Process> spawnedProcesses = new List<Process>();
+        private List<Process> spawnedProcesses = new List<Process>();
+        private IMessageBus mMessageBus;
 
         public MainWindow()
         {
@@ -24,7 +25,10 @@ namespace RapidLaunch.AppLauncher
             OpenFinGlobals.RuntimeInstance.Connected += OpenFinRuntime_Connected;
             OpenFinGlobals.RuntimeInstance.Disconnected += OpenFinRuntime_Disconnected;
 
-            OpenFinGlobals.RuntimeInstance.Connect(null);
+            OpenFinGlobals.RuntimeInstance.Connect(() => 
+            {
+
+            });
         }
 
         private void OpenFinRuntime_Connected(object sender, EventArgs e)
@@ -92,7 +96,30 @@ namespace RapidLaunch.AppLauncher
 
                 if (appShouldEmbed)
                 {
-                    tsc = SpawnEmbeddedApp();
+                    var appUuid = Guid.NewGuid().ToString();
+
+                    var appOptions = new Openfin.Desktop.ApplicationOptions(
+                        name: appUuid,
+                        uuid: appUuid,
+                        url: OpenFinGlobals.DefaultAppUrl)
+                    {
+                        NonPersistent = false
+                    };
+
+                    Openfin.Desktop.Application app = null;
+                    app = new Openfin.Desktop.Application(appOptions, OpenFinGlobals.RuntimeInstance.DesktopConnection,
+                        ack =>
+                        {
+                            app.Run(() => 
+                            {
+                                tsc.SetResult(Process.Start(new ProcessStartInfo()
+                                {
+                                    FileName = "SpawnedApp.exe",
+                                    Arguments = appUuid,
+                                    UseShellExecute = false
+                                }));
+                            });
+                        });
                 }
                 else
                 {
@@ -107,6 +134,8 @@ namespace RapidLaunch.AppLauncher
 
                 spawnedProcesses.Add(spawnedProcess);
                 spawnedProcess.Exited += SpawnedProcess_Exited;
+
+                
 
                 Task.Delay(delay).Wait();
             }

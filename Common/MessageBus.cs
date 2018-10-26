@@ -1,24 +1,41 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using Openfin.Desktop;
+using System;
 using System.Threading.Tasks;
-
-using Fin = Openfin.Desktop;
 
 namespace RapidLaunch.Common
 {
-    public static class MessagePublisher
+    public class MessageBus: IMessageBus
     {
-        public static void PingAppLauncher()
+        private readonly Runtime mRuntime;
+
+        public MessageBus()
         {
-            if(EnsureConnected())
+            mRuntime = Runtime.GetRuntimeInstance(OpenFinGlobals.RuntimeInstance.Options);
+
+            ConnectAsync();
+        }
+
+        private Task ConnectAsync()
+        {
+            var tcs = new TaskCompletionSource<int>();
+
+            mRuntime.Connect(() =>
             {
-                OpenFinGlobals.RuntimeInstance.InterApplicationBus.Publish("ping-app-launcher", new object());
+                tcs.SetResult(1);
+            });
+
+            return tcs.Task;
+        }
+
+        public void Publish<T>(string topic, T message)
+        {
+            if (EnsureConnected())
+            {
+                InterApplicationBus.Publish(mRuntime, topic, message);
             }
         }
 
-        private static bool EnsureConnected()
+        private bool EnsureConnected()
         {
             if (OpenFinGlobals.RuntimeInstance.IsConnected)
                 return true;
@@ -29,7 +46,7 @@ namespace RapidLaunch.Common
 
             EventHandler connectedEventHandler = null;
             EventHandler disconnectedEventHandler = null;
-            Fin.OpenFinErrorHandler errorEventHandler = null;
+            OpenFinErrorHandler errorEventHandler = null;
 
             OpenFinGlobals.RuntimeInstance.Connected += connectedEventHandler = (s, e) =>
             {

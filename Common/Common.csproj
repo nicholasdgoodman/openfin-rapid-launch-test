@@ -60,7 +60,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MessagePublisher.cs" />
+    <Compile Include="IMessageBus.cs" />
+    <Compile Include="MessageBus.cs" />
     <Compile Include="OpenFinGlobals.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
