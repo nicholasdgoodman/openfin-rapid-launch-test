@@ -112,8 +112,6 @@ namespace RapidLaunch.AppLauncher
                 spawnedProcesses.Add(spawnedProcess);
                 spawnedProcess.Exited += SpawnedProcess_Exited;
 
-                
-
                 Task.Delay(delay).Wait();
             }
         }

@@ -22,6 +22,7 @@ namespace RapidLaunch.SpawnedApp
     /// </summary>
     public partial class MainWindow : Window
     {
+        private Openfin.Desktop.Application mEmbeddedApplication;
         public MainWindow()
         {
             InitializeComponent();
@@ -33,12 +34,10 @@ namespace RapidLaunch.SpawnedApp
             {
                 if (!string.IsNullOrEmpty(App.OpenFinUuid))
                 {
-                    var appToEmbed = OpenFinGlobals.RuntimeInstance.WrapApplication(App.OpenFinUuid);
-                    WebContents.Initialize(OpenFinGlobals.RuntimeInstance.Options, appToEmbed.getWindow());
+                    mEmbeddedApplication = OpenFinGlobals.RuntimeInstance.WrapApplication(App.OpenFinUuid);
+                    WebContents.Initialize(OpenFinGlobals.RuntimeInstance.Options, mEmbeddedApplication.getWindow());
                 }
             });
-
-            Task.Run(new Action(PingAppLauncherLoop));
         }
 
         private void OpenFinRuntime_Connected(object sender, EventArgs e)
@@ -47,6 +46,7 @@ namespace RapidLaunch.SpawnedApp
             {
                 ConnectionStatusText.Text = "OpenFin Connected";
                 MainPanel.Background = Brushes.LightGreen;
+                UuidText.Text = $"Uuid: {App.OpenFinUuid}";
             });
         }
 
@@ -66,15 +66,6 @@ namespace RapidLaunch.SpawnedApp
                 }
             });
 
-        }
-
-        private void PingAppLauncherLoop()
-        {
-            while(true)
-            {
-                //MessagePublisher.PingAppLauncher();
-                //Task.Delay(1000).Wait();
-            }
         }
     }
 }

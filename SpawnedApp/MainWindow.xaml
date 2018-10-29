@@ -12,6 +12,8 @@
             <TextBlock Name="ConnectionStatusText">OpenFin Not Connected</TextBlock>
             <Separator/>
             <TextBlock>No Messages</TextBlock>
+            <Separator />
+            <TextBlock Name="UuidText">Uuid: </TextBlock>
         </StatusBar>
         <of:EmbeddedView Name="WebContents" Margin="5" Background="LightGray"></of:EmbeddedView>
     </DockPanel>
