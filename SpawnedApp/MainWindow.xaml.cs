@@ -26,10 +26,24 @@ namespace RapidLaunch.SpawnedApp
         {
             InitializeComponent();
 
-            OpenFinGlobals.RuntimeInstance.Connected += OpenFinRuntime_Connected;
-            OpenFinGlobals.RuntimeInstance.Disconnected += OpenFinRuntime_Disconnected;
+            var runtimeOptions = new Openfin.Desktop.RuntimeOptions()
+            {
+                Version = "9.*"
+            };
 
-            OpenFinGlobals.RuntimeInstance.Connect(() =>
+            if(App.OpenFinPort != 0)
+            {
+                runtimeOptions.Port = App.OpenFinPort;
+                runtimeOptions.PortDiscoveryMode = Openfin.Desktop.PortDiscoveryMode.None;
+                runtimeOptions.RuntimeConnectOptions = Openfin.Desktop.RuntimeConnectOptions.UseExternal;
+            }
+
+            var runtimeInstance = Openfin.Desktop.Runtime.GetRuntimeInstance(runtimeOptions);
+
+            runtimeInstance.Connected += OpenFinRuntime_Connected;
+            runtimeInstance.Disconnected += OpenFinRuntime_Disconnected;
+
+            runtimeInstance.Connect(() =>
             {
                 if (!string.IsNullOrEmpty(App.OpenFinUuid))
                 {

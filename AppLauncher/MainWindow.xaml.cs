@@ -13,6 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Diagnostics;
+using System.Threading;
 
 using RapidLaunch.Common;
 
@@ -78,8 +79,7 @@ namespace RapidLaunch.AppLauncher
             var embeddedViewCount = int.Parse(EmbeddedViewCountText.Text);
             var delay = int.Parse(DelayText.Text);
 
-            var spawnAppsTask = new Task(() => SpawnChildApps(wpfAppCount, embeddedViewCount, delay));
-            spawnAppsTask.Start();
+            Task.Run(() => SpawnChildApps(wpfAppCount, embeddedViewCount, delay));
         }
 
         private void SpawnChildApps(int wpfAppCount, int embeddedViewCount, int delay)
@@ -96,53 +96,73 @@ namespace RapidLaunch.AppLauncher
                 .OrderBy(b => rand.Next())
                 .ToArray();
 
-            foreach(var appShouldEmbed in appsShouldEmbed)
+            // Testing finds no significant difference in lanching in series vs in parallel
+            // Keeping code in-series for simplicity and allow a sequential per-launch delay         
+            //var parallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = 1 };
+            //Parallel.ForEach(appsShouldEmbed, parallelOptions, appShouldEmbed =>  
+
+            foreach (var appShouldEmbed in appsShouldEmbed)
             {
-                var tsc = new TaskCompletionSource<Process>();
+                var processTask = appShouldEmbed ?
+                    SpawnEmbeddedAppAsync() :
+                    SpawnAppAsync();
 
-                if(appShouldEmbed)
-                {
-                    var appUuid = Guid.NewGuid().ToString();
+                // This call blocks (on purpose) to restrict how many spawns happen at once
+                var spawnedProcess = processTask.Result;
 
-                    var appOptions = new Openfin.Desktop.ApplicationOptions(
-                        name: appUuid,
-                        uuid: appUuid,
-                        url: OpenFinGlobals.DefaultAppUrl)
-                    {
-                        NonPersistent = false
-                    };
+                Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId:X8} Got Process    ");
 
-                    Openfin.Desktop.Application app = null;
-                    app = new Openfin.Desktop.Application(appOptions, OpenFinGlobals.RuntimeInstance.DesktopConnection,
-                        ack =>
-                        {
-                            app.Run(() => 
-                            {
-                                tsc.SetResult(Process.Start(new ProcessStartInfo()
-                                {
-                                    FileName = "SpawnedApp.exe",
-                                    Arguments = appUuid,
-                                    UseShellExecute = false
-                                }));
-                            });
-                        });
-                }
-                else
-                {
-                    tsc.SetResult(Process.Start(new ProcessStartInfo()
-                    {
-                        FileName = "SpawnedApp.exe",
-                        UseShellExecute = false
-                    }));
-                }
-
-                var spawnedProcess = tsc.Task.Result;
-                
                 spawnedProcesses.Add(spawnedProcess);
                 spawnedProcess.Exited += SpawnedProcess_Exited;
 
                 Task.Delay(delay).Wait();
-            }
+            };
+        }
+
+        private Task<Process> SpawnEmbeddedAppAsync()
+        {
+            var appUuid = Guid.NewGuid().ToString();
+
+            var tsc = new TaskCompletionSource<Process>();
+            var appOptions = new Openfin.Desktop.ApplicationOptions(
+                name: appUuid,
+                uuid: appUuid,
+                url: OpenFinGlobals.DefaultAppUrl)
+            {
+                NonPersistent = false
+            };
+
+            Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId:X8} App Creating    {appUuid}");
+
+            var app = OpenFinGlobals.RuntimeInstance.CreateApplication(appOptions);
+            app.Run(async () =>
+            {
+                tsc.SetResult(await SpawnAppAsync(appUuid));
+            });
+
+            return tsc.Task;
+        }
+
+        private Task<Process> SpawnAppAsync(string appUuid = "")
+        {
+            var tsc = new TaskCompletionSource<Process>();
+            tsc.SetResult(SpawnApp(appUuid));
+            return tsc.Task;
+        }
+
+        private Process SpawnApp(string appUuid)
+        {
+            var process = Process.Start(new ProcessStartInfo()
+            {
+                FileName = "SpawnedApp.exe",
+                Arguments = $"\"{appUuid}\" {OpenFinGlobals.RuntimeInstance.DesktopConnection.Port}",
+                UseShellExecute = false
+            });
+
+            process.EnableRaisingEvents = true;
+
+            Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId:X8} Process Started {appUuid}");
+            return process;
         }
 
         [System.Runtime.InteropServices.DllImport("user32.dll", SetLastError = true)]
@@ -150,14 +170,25 @@ namespace RapidLaunch.AppLauncher
 
         private void ArrangeButton_Click(object sender, RoutedEventArgs e)
         {
-            for(int n = 0; n < spawnedProcesses.Count; n++)
-            {
-                var row = n % 5;
-                var col = n / 5;
-                var xf = 280;
-                var yf = 160;
+            int n = 0;
 
-                MoveWindow(spawnedProcesses[n].MainWindowHandle, xf * col, yf * row, xf, yf, true);
+            foreach(var spawnedProcess in spawnedProcesses.ToArray())
+            {
+                if(!spawnedProcess.HasExited)
+                {
+                    var row = n % 5;
+                    var col = n / 5;
+                    var xf = 280;
+                    var yf = 160;
+
+                    MoveWindow(spawnedProcesses[n].MainWindowHandle, xf * col, yf * row, xf, yf, true);
+
+                    n++;
+                }
+                else
+                {
+                    spawnedProcesses.Remove(spawnedProcess);
+                }
             }
         }
 
@@ -170,7 +201,10 @@ namespace RapidLaunch.AppLauncher
         {
             foreach(var spawnedProcess in spawnedProcesses.ToArray())
             {
-                spawnedProcess.CloseMainWindow();
+                if(!spawnedProcess.HasExited)
+                {
+                    spawnedProcess.CloseMainWindow();
+                }
                 spawnedProcesses.Remove(spawnedProcess);
             }
         }
@@ -179,7 +213,10 @@ namespace RapidLaunch.AppLauncher
         {
             foreach (var spawnedProcess in spawnedProcesses.ToArray())
             {
-                spawnedProcess.Kill();
+                if(!spawnedProcess.HasExited)
+                {
+                    spawnedProcess.Kill();
+                }
                 spawnedProcesses.Remove(spawnedProcess);
             }
         }

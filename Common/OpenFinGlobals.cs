@@ -17,7 +17,8 @@ namespace RapidLaunch.Common
             };
 
             RuntimeInstance = Fin.Runtime.GetRuntimeInstance(openfinOptions);
-            DefaultAppUrl = "about:blank";
+            DefaultAppUrl = "http://flatlogic.github.io/angular-material-dashboard/#/dashboard";
+            //DefaultAppUrl = "about:blank";
         }
 
         public static Fin.Runtime RuntimeInstance { get; private set; }

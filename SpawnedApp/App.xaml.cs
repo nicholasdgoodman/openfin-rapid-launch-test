@@ -15,12 +15,18 @@ namespace RapidLaunch.SpawnedApp
     public partial class App : Application
     {
         public static string OpenFinUuid { get; private set; }
+        public static int OpenFinPort { get; private set; }
 
         protected override void OnStartup(StartupEventArgs e)
         {
             if(e.Args.Length > 0)
             {
                 OpenFinUuid = e.Args[0];
+            }
+
+            if(e.Args.Length > 1)
+            {
+                OpenFinPort = int.Parse(e.Args[1]);
             }
 
             base.OnStartup(e);
